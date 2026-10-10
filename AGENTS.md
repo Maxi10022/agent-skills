@@ -1,13 +1,14 @@
 # Instructions for AI agents
 
-This repository is a library of Agent Skills (https://agentskills.io/specification). Each folder under `skills/`
-is one skill. The first part below is for agents using the skills on a user's task; the second is for agents adding
-or changing skills here.
+This repository is a library of Agent Skills (https://agentskills.io/specification), grouped by topic into plugins.
+Each folder under `plugins/<plugin>/skills/` is one skill. The first part below is for agents using the skills on a
+user's task; the second is for agents adding or changing skills here.
 
 ## Using a skill from this repository
 
-1. **Choose by description.** Read only the frontmatter (`name`, `description`) of each `skills/*/SKILL.md`. Load a
-   skill's full `SKILL.md` when the user's task matches its description, including its "Not for" boundary.
+1. **Choose by description.** Read only the frontmatter (`name`, `description`) of each
+   `plugins/*/skills/*/SKILL.md`. Load a skill's full `SKILL.md` when the user's task matches its description,
+   including its "Not for" boundary.
 2. **Follow `SKILL.md` and open the rest on demand.** Read a file in `references/` or `templates/` only when
    `SKILL.md` points to it for the step you are on. Each link says when it is worth reading.
 3. **Translate the examples.** Snippets use a fictional domain (`Webhook`, `Customer`, `ShareLink`, `Book`) and the
@@ -26,8 +27,13 @@ or changing skills here.
 
 ### Format
 
-- **Folder and name.** `skills/<name>/SKILL.md`, where `<name>` uses lowercase letters, digits and single hyphens,
-  at most 64 characters, and equals the frontmatter `name`.
+- **Folder and name.** `plugins/<plugin>/skills/<name>/SKILL.md`, where `<name>` uses lowercase letters, digits and
+  single hyphens, at most 64 characters, and equals the frontmatter `name`. Skill names stay unique across plugins,
+  because a copied skill folder loses its plugin.
+- **Plugins.** A plugin is one topic. It has a `plugin.json` at its root (`name` equal to the folder name, `version`,
+  `description`) and one entry in each marketplace file, `.claude-plugin/marketplace.json` for Claude Code and
+  `.agents/plugins/marketplace.json` for Codex, with the source `./plugins/<plugin>`. Both marketplaces are named
+  `maxi10022`; `agent-skills` is reserved by Claude Code.
 - **Description.** 1-1024 characters, in the frontmatter. It decides when agents load the skill, so it states:
   - what the skill covers;
   - the concrete situations and phrases that should trigger it;
@@ -52,8 +58,11 @@ or changing skills here.
 
 ### Before you finish
 
-- Add or update the skill's row in the table in `README.md`.
+- Raise the `version` in the plugin's `plugin.json` whenever a skill in it changes. Claude Code keeps installed
+  plugins on their version until this number changes, so without it nobody receives the change.
+- Add or update the skill's row in the plugin's table in `README.md`.
 - Run `python3 tools/validate_skills.py`. It must report 0 errors. With the reference validator installed, also run
-  `skills-ref validate skills/<name>`.
+  `skills-ref validate plugins/<plugin>/skills/<name>`. With Claude Code installed, also run
+  `claude plugin validate .`.
 - When templates changed, compile them in a scratch project against the package versions the skill names.
 - Commit one skill per commit, with a message that says what changed and why.

@@ -1,0 +1,17 @@
+{
+  "name": "maxi10022",
+  "description": "Maxi10022's library of Agent Skills, grouped into plugins by topic",
+  "owner": {
+    "name": "Maxi10022",
+    "url": "https://github.com/Maxi10022"
+  },
+  "plugins": [
+    {
+      "name": "dotnet-testing",
+      "source": "./plugins/dotnet-testing",
+      "description": "Testing .NET apps: C# test formatting, Marten/Wolverine integration tests, bUnit page tests and a per-test data catalog",
+      "category": "testing",
+      "tags": ["dotnet", "csharp", "xunit", "marten", "wolverine", "bunit", "testing"]
+    }
+  ]
+}

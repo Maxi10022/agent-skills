@@ -1,0 +1,14 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "dotnet-testing",
+  "version": "1.0.0",
+  "description": "Testing .NET apps: C# test formatting, Marten/Wolverine integration tests, bUnit page tests and a per-test data catalog",
+  "author": {
+    "name": "Maxi10022",
+    "url": "https://github.com/Maxi10022"
+  },
+  "homepage": "https://github.com/Maxi10022/agent-skills",
+  "repository": "https://github.com/Maxi10022/agent-skills",
+  "license": "MIT",
+  "keywords": ["dotnet", "csharp", "xunit", "marten", "wolverine", "bunit", "testing"]
+}
