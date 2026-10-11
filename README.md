@@ -33,15 +33,18 @@ frameworks.
 
 ### git-workflow
 
-Skills that keep agents' git history readable. They come out of a repository where agents
-wrote commit subjects of up to 1,200 characters.
+Two skills that keep agents' git history readable and their worktrees tidy. They come out of a repository where agents
+wrote commit subjects of up to 1,200 characters and left worktrees behind after their branches were merged.
 
 | Skill | What it teaches | Reach for it when |
 |---|---|---|
 | [git-commit](plugins/git-workflow/skills/git-commit/SKILL.md) | subjects like `Updated WebhookDispatcher.cs, retries back off exponentially` (past tense, the file or feature, what changed, 72 characters), a body only for the reason, one change per commit, committing by pathspec without sweeping up the user's staged work, a lint script for the draft | any commit an agent makes, or rewording and splitting commits |
+| [git-worktree](plugins/git-workflow/skills/git-worktree/SKILL.md) | creating a worktree beside the repository from local main, working without touching the main checkout, landing by rebase and fast-forward, and a script that tells landed branches (merged, rebased or squashed) from unused, unfinished and dirty ones and removes only the landed | starting, landing or finishing work in a worktree, or cleaning up old worktrees and branches |
 
-The lint script needs only Python 3.10. It passes 168 of 200 hand-written commits of the source repository
-(28 of the other 32 have subjects over 100 characters) and rejects 128 of its last 150 agent commits.
+Both scripts need only Python 3.10 and git. The lint passes 168 of 200 hand-written commits of the source repository
+(28 of the other 32 have subjects over 100 characters) and rejects 128 of its last 150 agent commits. The
+worktree script was checked against nineteen cases in a scratch repository, from squash merges to locked worktrees,
+with git 2.53.
 
 Claude Code adds its own commit instructions to every session ("a concise 1-2 sentence message", copy the style of
 `git log`), which compete with `git-commit`. Turn them off with `"includeGitInstructions": false` in
