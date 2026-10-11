@@ -31,6 +31,22 @@ The skills assume .NET 10 / C# 14, xUnit v3 and FluentAssertions 7. The integrat
 Wolverine 6, Alba 8, Testcontainers 4 and bUnit 2. Each skill says what to change for other versions or test
 frameworks.
 
+### git-workflow
+
+Skills that keep agents' git history readable. They come out of a repository where agents
+wrote commit subjects of up to 1,200 characters.
+
+| Skill | What it teaches | Reach for it when |
+|---|---|---|
+| [git-commit](plugins/git-workflow/skills/git-commit/SKILL.md) | subjects like `Updated WebhookDispatcher.cs, retries back off exponentially` (past tense, the file or feature, what changed, 72 characters), a body only for the reason, one change per commit, committing by pathspec without sweeping up the user's staged work, a lint script for the draft | any commit an agent makes, or rewording and splitting commits |
+
+The lint script needs only Python 3.10. It passes 168 of 200 hand-written commits of the source repository
+(28 of the other 32 have subjects over 100 characters) and rejects 128 of its last 150 agent commits.
+
+Claude Code adds its own commit instructions to every session ("a concise 1-2 sentence message", copy the style of
+`git log`), which compete with `git-commit`. Turn them off with `"includeGitInstructions": false` in
+`~/.claude/settings.json`; that also drops the git status snapshot at the start of a session.
+
 ## Install
 
 Pick one way per agent. Installing the same skill twice, say as a plugin and as a copied folder, gives the agent two
@@ -43,9 +59,10 @@ In a Claude Code session:
 ```
 /plugin marketplace add Maxi10022/agent-skills
 /plugin install dotnet-testing@maxi10022
+/plugin install git-workflow@maxi10022
 ```
 
-The first line registers this repository as a plugin marketplace named `maxi10022`; the second installs a plugin
+The first line registers this repository as a plugin marketplace named `maxi10022`; the others install plugins
 from it. From the shell, `claude plugin install dotnet-testing --marketplace Maxi10022/agent-skills` does both in one
 step (Claude Code 2.1.275 or later). Restart the session or run `/reload-plugins` to load the skills.
 
@@ -60,7 +77,7 @@ codex plugin marketplace add Maxi10022/agent-skills
 ```
 
 Then, following [OpenAI's plugin guide](https://developers.openai.com/plugins/build/plugins), restart the ChatGPT
-desktop app, open the **Plugins Directory**, choose **Maxi10022 Agent Skills** and install `dotnet-testing`.
+desktop app, open the **Plugins Directory**, choose **Maxi10022 Agent Skills** and install the plugins you want.
 `codex plugin marketplace upgrade maxi10022` fetches new versions.
 
 The Codex marketplace files follow OpenAI's documentation but have not been tested in Codex yet. If they do not work
@@ -121,11 +138,13 @@ Inside a skill:
 - **`references/`** holds longer examples and catalogues, which the agent reads when `SKILL.md` points to them.
 - **`templates/`** holds C# files to copy into your test project. They use the namespace `YourApp.Tests.Testing.*` and
   assume the shared test namespaces are global usings; rename them to your project's.
+- **`scripts/`** holds small programs the agent runs, such as the commit-message lint. They need only Python 3.10 and
+  its standard library.
 
 ## Without Claude, and with local models
 
-Nothing in these skills depends on Claude: they are Markdown and C# files. Any agent that supports the format loads
-them, including agents that run local models, such as [OpenCode](https://opencode.ai) or
+Nothing in these skills depends on Claude: they are Markdown, C# and Python files. Any agent that supports the format
+loads them, including agents that run local models, such as [OpenCode](https://opencode.ai) or
 [Goose](https://block.github.io/goose/) talking to Ollama or LM Studio.
 
 For an agent without skill support, add a line to its instructions file (`AGENTS.md`, a system prompt or a rules
@@ -135,7 +154,8 @@ the `SKILL.md` text into the conversation.
 Two caveats:
 
 - The skills were benchmarked with Claude only. Smaller local models tend to follow long instructions less reliably.
-- An agent needs file access, because `SKILL.md` sends it to `references/` and `templates/` for the details.
+- An agent needs file access, because `SKILL.md` sends it to `references/`, `templates/` and `scripts/` for the
+  details.
 
 ## How the .NET skills were checked
 
@@ -154,6 +174,7 @@ plugins/<plugin>/plugin.json                    the plugin's name, version and d
 plugins/<plugin>/skills/<name>/SKILL.md         instructions, with a name and description at the top
 plugins/<plugin>/skills/<name>/references/      detail an agent reads when SKILL.md points to it
 plugins/<plugin>/skills/<name>/templates/       files to copy into a project and adapt
+plugins/<plugin>/skills/<name>/scripts/         programs the agent runs, Python standard library only
 .claude-plugin/marketplace.json                 the plugin list Claude Code reads
 .agents/plugins/marketplace.json                the plugin list Codex reads
 tools/validate_skills.py                        checks plugins and skills against the format and the rules here

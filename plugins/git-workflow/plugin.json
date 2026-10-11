@@ -1,0 +1,14 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "git-workflow",
+  "version": "1.0.0",
+  "description": "Git for agents: short past-tense commit messages, commits that hold only their own work, and worktrees that are removed once their work is on main",
+  "author": {
+    "name": "Maxi10022",
+    "url": "https://github.com/Maxi10022"
+  },
+  "homepage": "https://github.com/Maxi10022/agent-skills",
+  "repository": "https://github.com/Maxi10022/agent-skills",
+  "license": "MIT",
+  "keywords": ["git", "commit", "commit-message", "worktree", "branch"]
+}

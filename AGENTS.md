@@ -44,6 +44,10 @@ user's task; the second is for agents adding or changing skills here.
 - **Templates.** Files an agent copies into a project go in `templates/`. They must compile, or be clearly marked as
   excerpts that need the user's app. Use a neutral namespace (`YourApp.*`) and say in one comment line what to
   adapt.
+- **Scripts.** Programs an agent runs go in `scripts/`. Use Python 3.10 and its standard library only, so they run
+  wherever the agent does. Put the usage in the module docstring, which `--help` prints. A script that changes
+  anything only reports by default and acts behind an explicit flag. Test every case it decides on in a scratch
+  repository or folder, never in a real project.
 
 ### Content
 

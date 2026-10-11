@@ -12,6 +12,13 @@
       "description": "Testing .NET apps: C# test formatting, Marten/Wolverine integration tests, bUnit page tests and a per-test data catalog",
       "category": "testing",
       "tags": ["dotnet", "csharp", "xunit", "marten", "wolverine", "bunit", "testing"]
+    },
+    {
+      "name": "git-workflow",
+      "source": "./plugins/git-workflow",
+      "description": "Git for agents: short past-tense commit messages, commits that hold only their own work, and worktrees that are removed once their work is on main",
+      "category": "development",
+      "tags": ["git", "commit", "commit-message", "worktree", "branch"]
     }
   ]
 }
