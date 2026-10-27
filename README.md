@@ -15,6 +15,18 @@ Codex, or copy single skills into any other agent.
 
 ## Plugins and skills
 
+### dotnet-coding
+
+One skill for writing .NET production code. It comes out of implementations the maintainer wrote by hand and of the
+maintainer's rework of agent-written code; its examples use the same fictional catalog domain (customers, books).
+
+| Skill | What it teaches | Reach for it when |
+|---|---|---|
+| [csharp-code-structure](plugins/dotnet-coding/skills/csharp-code-structure/SKILL.md) | public members as named steps, where lines break (after `(`, `=>`, `=`, `??`, a wrapped parameter list on one line, pipelines one call per line), when a condition, a step or a closure becomes a predicate, a method, a local function, an extension block or a type of its own, member order, the comment policy | writing or changing non-test C# code, reviewing a diff for structure, splitting a long method or class, or sweeping a file to one style |
+
+The skill assumes .NET 10 / C# 14. Its three exemplars use MailKit, Marten and Microsoft.Extensions.AI, but the rules
+hold for any library.
+
 ### dotnet-testing
 
 Four skills for testing .NET applications. They come out of reworking a large production test suite; their examples
@@ -61,6 +73,7 @@ In a Claude Code session:
 
 ```
 /plugin marketplace add Maxi10022/agent-skills
+/plugin install dotnet-coding@maxi10022
 /plugin install dotnet-testing@maxi10022
 /plugin install git-workflow@maxi10022
 ```
@@ -169,6 +182,8 @@ runs with the skills met 86–100% of the expected outcomes and runs without the
 "the root cause of the slow shutdown is Wolverine's drain timeout".
 
 The other three tasks were solved almost as well without a skill, so they say little either way.
+
+`csharp-code-structure` is not benchmarked yet; the figures above cover the testing skills.
 
 ## Repository layout
 
