@@ -7,6 +7,13 @@
   },
   "plugins": [
     {
+      "name": "dotnet-coding",
+      "source": "./plugins/dotnet-coding",
+      "description": "Writing .NET production code: how C# is shaped, wrapped, extracted and commented when its maintainer writes it by hand",
+      "category": "development",
+      "tags": ["dotnet", "csharp", "code-style", "refactoring", "formatting"]
+    },
+    {
       "name": "dotnet-testing",
       "source": "./plugins/dotnet-testing",
       "description": "Testing .NET apps: C# test formatting, Marten/Wolverine integration tests, bUnit page tests and a per-test data catalog",
