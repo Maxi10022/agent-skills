@@ -5,10 +5,9 @@ description: How production C# reads when its maintainer writes it by hand - whe
 
 # C# code structure
 
-Production code should read as if one careful person wrote all of it. A public member reads as the steps it takes,
-every step and every condition that needs a sentence has a name, and a line breaks where the reader expects it to.
-These rules are read off implementations the maintainer wrote by hand and holds up as the target, and off the
-maintainer's rework of agent-written code.
+Production code should read as if one careful person wrote all of it: a public member reads as its steps, every
+step and every condition that needs a sentence has a name, and lines break where the reader expects. The rules are
+read off code the maintainer wrote by hand and off the maintainer's rework of agent-written code.
 
 - [references/exemplars.md](references/exemplars.md): three of those implementations in full, with notes (a
   connection pool, a chat client factory with a tracking decorator, a search projection base). Read the one closest
@@ -16,10 +15,9 @@ maintainer's rework of agent-written code.
 - [references/before-after.md](references/before-after.md): twelve reworks, agent code before and the maintainer's
   version after. Read it before you restructure existing code or review a diff.
 
-Assumed: C# 14 and .NET 10 (extension blocks, collection expressions, primary constructors, `field`, the `Lock`
-type) and 120 columns. **The project's own rules win.** Before you start, read its `AGENTS.md` or `CLAUDE.md`,
-`.editorconfig` and convention tests, and check the points in "Where projects differ" below; name every conflict you
-settle in the project's favor in your reply.
+Assumed: C# 14, .NET 10 and 120 columns. **The project's own rules win.** Before you start, read its `AGENTS.md`
+or `CLAUDE.md`, `.editorconfig` and convention tests, check the points in "Where projects differ" below, and name
+every conflict you settle in the project's favor in your reply.
 
 ## The shape of a member
 
@@ -105,6 +103,26 @@ These shapes break whether or not they would fit, because each part is something
   stays there while the line fits (`MartenOps.Insert(new Webhook(...))`); once it overflows it becomes a named local,
   and a multi-line named-argument construction becomes a local function or a small private method
   (`NewConversation()`).
+- **Initializer braces stand only at statement level, and always multi-line.** An object, collection or dictionary
+  initializer, or a `with` expression, opens its braces only as the right side of a declaration or assignment, after
+  `return`, as a whole expression body or as a switch arm's result, with one member per line. Never on one line
+  (`new Dictionary<string, byte[]> { [KeyId] = keys.Messages }`), and never inside a call's arguments, another
+  initializer, a collection expression or a lambda, multi-line or not: braces buried in an expression hide a
+  construction the reader should see on its own. Build it first, as a named local in a block body, or as a helper
+  (a local function or a private method) where no statement can stand (inside an expression body, a field
+  initializer or a lambda) or where the construction deserves a name (`WithValue(error)`). A collection takes a collection expression
+  (`[a, b]`) instead of an initializer. Not covered: property patterns (`is { } x`), accessors, and anonymous types
+  inside a lambda (`HasKey(book => new { book.Shelf, book.Id })`).
+
+  ```csharp
+  var messageKeys = new Dictionary<string, byte[]>
+  {
+      [KeyId] = keys.Messages
+  };
+
+  var provider = new InMemoryKeyProvider(KeyId, messageKeys);
+  ```
+
 - **A ternary takes three lines** in a return, an assignment or an expression body: the condition, then `? ...` and
   `: ...`, one indent deeper. A ternary nested in another becomes a switch expression.
 
@@ -126,13 +144,12 @@ And these only when they don't fit:
 - **A boolean** breaks after `=>` or `=` first; if it still doesn't fit, or its clauses are comparisons a reader
   checks one by one (`shouldKeep`), it breaks before each top-level `&&` or `||`, operators leading and lined up
   under the first operand. A run of short member checks stays on one line (`CanUseConnection`).
-- **A call:** when its last argument is a lambda or an initializer, the earlier arguments stay on the call line and
-  the last one opens there (`Parallel.ForEach(_connections, new ParallelOptions { CancellationToken = ct }, pooled
-  =>`). A single long call keeps its receiver on the `=` line and breaks before the `.`
+- **A call:** when its last argument is a lambda, the earlier arguments stay on the call line and the lambda opens
+  there (`Parallel.ForEachAsync(updates, cancellation, async (documentId, ct) =>`). A single long call keeps its
+  receiver on the `=` line and breaks before the `.`
   (`var vectorDocs = await session` / `.VectorSearchWithScoresAsync<TDocument>(...)`).
 - **A construction** stays positional while it fits (`new(capacity, capacity)`). Once it wraps, it takes named
-  arguments, one per line, `)` on its own line. An initializer with one property may stay on one line
-  (`new AnthropicClient { ApiKey = apiKey }`); two or more go one per line.
+  arguments, one per line, `)` on its own line.
 
 Braces and blank lines:
 
@@ -243,19 +260,16 @@ A reader goes top-down, so the file reads like an outline: what a member does, t
 
 ## Lifetime and concurrency idioms
 
-- A flag is a `byte` or `int` set with `Interlocked.Exchange`; dispose once with
-  `if (Interlocked.Exchange(ref _disposed, 1) != 0) return;` and guard entry points with `ObjectDisposedException.ThrowIf`.
-- A `SemaphoreSlim` that guards a block is released in a `finally`; one that counts capacity is released where the
-  capacity comes back (on return, and in the catch of a failed creation). A short critical section is a `lock` on a
-  `Lock` field.
-- Time comes from an injected `TimeProvider`, and handlers are bounded with `new CancellationTokenSource(limit, time)`.
+- A flag is a `byte` or `int` set with `Interlocked.Exchange`; dispose once with `if (Interlocked.Exchange(ref
+  _disposed, 1) != 0) return;`, and guard entry points with `ObjectDisposedException.ThrowIf`.
+- A `SemaphoreSlim` guarding a block is released in a `finally`; one counting capacity is released where the capacity
+  comes back. A short critical section is a `lock` on a `Lock` field. Time comes from an injected `TimeProvider`.
 
 ## Where projects differ
 
 Check each against the project before writing; the exemplars took one side, the project may take the other:
 
-- the column limit (120 here; some projects use 100);
-- `sealed`, and whether settings, options and stored documents are records or classes;
+- the column limit (120 here; some projects use 100), `sealed`, and records or classes for settings and documents;
 - which XML doc tags a public member needs (a summary only, or every `param`, `typeparam`, `returns`);
 - extension blocks everywhere, or classic `this` methods for `IServiceCollection` and builder hooks;
 - whether every chained builder call starts its own line, even a single one (`WithChatOptions()` /
@@ -264,29 +278,22 @@ Check each against the project before writing; the exemplars took one side, the 
 
 ## Restructuring existing code
 
-- **Reshape only what your change touches**, unless the task is a sweep; a drive-by reformat hides the real change.
-- **A sweep goes one file or feature per commit**, with moves and renames in their own commit first. Behavior stays
-  the same, the tests are green before and after, and a sweep never shares a commit with a feature.
+Reshape only what your change touches, unless the task is a sweep: a drive-by reformat hides the real change. A
+sweep goes one file or feature per commit, moves and renames first, behavior unchanged and never with a feature.
 
 ## Enforce what a pattern can check
 
 With the exemption ratchet of `csharp-test-formatting`'s convention tests (today's violators are listed, the list
 only shrinks): lines past the limit; `//` comment blocks of two or more lines outside XML docs; a method's wrapped
 parameter list split one per line although it fits on one continuation line (a Roslyn syntax walk); an `await`
-inside another call's argument list. The rest needs a reader: review a diff with this file and the closest exemplar
-open, and report each deviation as file:line with a before and after.
+inside another call's argument list; an initializer or `with` whose `{` shares a line with a member, or that sits
+inside an argument list. The rest needs a reader: review a diff with this file and the closest exemplar open, and
+report each deviation as file:line with a before and after.
 
 ## Before you finish
 
-- Reread every member you changed from the top: named steps, named conditions, no nested `await`, breaks at the
-  points above, helpers below their callers.
+- Reread every member you changed from the top: named steps, named conditions, no nested `await`, no initializer
+  braces inside an expression, breaks at the points above, helpers below their callers.
 - Hold the file next to the closest exemplar; a shape the exemplar would not have needs a reason.
 - No comment a name could replace, no guard for an unreachable state, nothing computed twice.
 - Build without warnings and run the tests and convention tests the project names.
-
-## References
-
-- [references/exemplars.md](references/exemplars.md): a connection pool, a chat client factory with a tracking
-  decorator, and a search projection base, each with what to notice and what was normalized.
-- [references/before-after.md](references/before-after.md): the maintainer's rework of agent code, pair by pair, each
-  with the rule it shows.

@@ -236,7 +236,12 @@ public class ClientConnectionPool<TClient>(GenerationTracker tracker, int capaci
     {
         ct.ThrowIfCancellationRequested();
 
-        Parallel.ForEach(_connections, new ParallelOptions { CancellationToken = ct }, pooled =>
+        var parallelOptions = new ParallelOptions
+        {
+            CancellationToken = ct
+        };
+
+        Parallel.ForEach(_connections, parallelOptions, pooled =>
         {
             if (pooled.Generation < tracker.Value) return;
             pooled.PerformHeartbeat(ct);
@@ -451,7 +456,8 @@ public record PooledConnection<TClient>(
 **Normalized:** `PooledConnection` declared its property before its fields, its timeout was named `_heartbeatTimeout`
 and its lock came after the timestamp. `ShortConnectionLease` declared `_disposed` after its properties. The copy
 puts the fields first, in the order the other files of the pool use, and names the static readonly field in
-PascalCase.
+PascalCase. `PerformHeartbeat` passed `new ParallelOptions { CancellationToken = ct }` inline; since the maintainer
+settled that initializer braces stand only at statement level, the copy builds it as a multi-line local first.
 
 ---
 
@@ -513,7 +519,11 @@ public class ProviderClientFactory(IDocumentStore store, SecretStore secrets)
 
         if (provider.Url.IsAnthropic)
         {
-            var claude = new AnthropicClient { ApiKey = apiKey };
+            var claude = new AnthropicClient
+            {
+                ApiKey = apiKey
+            };
+
             return model => claude
                 .AsIChatClient(model)
                 .AsBuilder()
@@ -521,10 +531,12 @@ public class ProviderClientFactory(IDocumentStore store, SecretStore secrets)
                 .Build();
         }
 
-        var openAi = new OpenAIClient(new ApiKeyCredential(apiKey), new OpenAIClientOptions
+        var clientOptions = new OpenAIClientOptions
         {
             Endpoint = new Uri(provider.Url.Value)
-        });
+        };
+
+        var openAi = new OpenAIClient(new ApiKeyCredential(apiKey), clientOptions);
         return model => openAi.GetChatClient(model).AsIChatClient();
     }
 
@@ -1020,6 +1032,9 @@ public static class StoredConversationExtensions
 - **A shared helper instead of two literals.** `CreateError` serves the failed response and the failed stream.
 - **Comments only at hazards and constants.** The constant's comment says why 16000; the comment on `MoveNextAsync`
   says why the catch can't sit around the `yield`; the registration's comment says why the column is duplicated.
+- **Initializers at statement level.** Every `{` of an initializer opens a declaration, a `return`, an expression
+  body or a switch arm, one member per line (`claude`, `clientOptions`, `CachedRequest`, `CreateError`); none sits
+  inside a call.
 - **Line breaks.** Builder and LINQ pipelines go one call per line. A getter plus a conversion
   (`openAi.GetChatClient(model).AsIChatClient()`) stays on one line. An expression-bodied `new()` starts on the line
   after `=>`. A guard whose throw doesn't fit breaks after the condition and stays braceless (`if (stored is null)`).
@@ -1033,7 +1048,9 @@ the copy leaves both to the project's own rules; it also drops the one-sentence 
 `ChatExecutionContext` and `StoredConversation`, and `StoredConversation`'s `sealed`. The manager's
 `TrackRealtimeSessionAsync`, which differs from `TrackSessionAsync` in its session type and the dictionary it adds
 to, is left out, as are the realtime session's `Updates`, events, `Track` and `CompleteAsync`. The secrets store
-and the page named in the registration comment are renamed. `TrackedChatClient`'s base list ran past
+and the page named in the registration comment are renamed. `CreateClientAsync` wrote
+`new AnthropicClient { ApiKey = apiKey }` on one line and passed the `OpenAIClientOptions` initializer inside the
+`OpenAIClient` call; under the maintainer's later rule both are multi-line locals here. `TrackedChatClient`'s base list ran past
 120 columns on the parameter line and moves to a line of its own.
 
 ---

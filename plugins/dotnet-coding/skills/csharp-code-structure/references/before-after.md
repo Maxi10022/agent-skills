@@ -3,8 +3,9 @@
 Every pair below is a real rework. *Before* is the code as an agent committed it. *After* is the maintainer's
 next commit on that code, made by hand. Names are translated to the fictional catalog domain (`Customer`, `Book`,
 `Webhook`, `Loan`); library calls (Marten, Wolverine, Microsoft.Extensions.AI, EF Core) are real. Where the
-maintainer's commit also changed behavior, that part is left out and named under the pair. Read the pair whose rule
-you are about to apply, or all of them before restructuring existing code.
+maintainer's commit also changed behavior, that part is left out and named under the pair. Where a rule settled later
+changes the after, a "Since then" block shows the code as it is written today. Read the pair whose rule you are about
+to apply, or all of them before restructuring existing code.
 
 ## Contents
 
@@ -72,6 +73,27 @@ public void Configure(WolverineOptions options)
 public void Configure(WolverineOptions options)
 {
     var provider = new InMemoryKeyProvider(KeyId, new Dictionary<string, byte[]> { [KeyId] = keys.Messages });
+
+    options.RegisterEncryptionSerializer(provider);
+    options.Policies.ForMessagesOfType<AddWebhook>().Encrypt();
+    options.Policies.ForMessagesOfType<UpdateWebhook>().Encrypt();
+}
+```
+
+### Since then
+
+This pair predates a rule the maintainer settled later: initializer braces never sit on one line or inside a call.
+The dictionary's `{ [KeyId] = keys.Messages }` still does, so today the same code builds it as a local of its own:
+
+```csharp
+public void Configure(WolverineOptions options)
+{
+    var messageKeys = new Dictionary<string, byte[]>
+    {
+        [KeyId] = keys.Messages
+    };
+
+    var provider = new InMemoryKeyProvider(KeyId, messageKeys);
 
     options.RegisterEncryptionSerializer(provider);
     options.Policies.ForMessagesOfType<AddWebhook>().Encrypt();
